@@ -37,7 +37,11 @@ app.use(cors({
     if (!origin) return callback(null, true);
     try {
       const host = new URL(origin).hostname;
-      if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(host)) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(host) ||
+        /\.pages\.dev$/.test(host)
+      ) return callback(null, true);
     } catch (e) {}
     callback(new Error('Not allowed by CORS'));
   },
