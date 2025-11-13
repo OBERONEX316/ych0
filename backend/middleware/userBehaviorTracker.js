@@ -110,7 +110,7 @@ class UserBehaviorTracker {
         }
 
         // 记录页面访问
-        if (req.method === 'GET') {
+        if (req.method === 'GET' && req.user?._id) {
           const behaviorData = {
             userId: req.user?._id || null,
             sessionId: sessionId,
@@ -137,16 +137,15 @@ class UserBehaviorTracker {
           };
 
           // 异步记录行为，不阻塞主流程
-          this.trackBehavior(behaviorData).catch(error => {
-            console.error('页面访问记录失败:', error);
-          });
+          this.trackBehavior(behaviorData).catch(() => {});
         }
 
         // 将追踪器附加到请求对象
         req.behaviorTracker = {
           track: async (action, targetType, targetId, additionalData = {}) => {
+            if (!req.user?._id) return null;
             return this.trackBehavior({
-              userId: req.user?._id || null,
+              userId: req.user._id,
               sessionId: sessionId,
               action: action,
               targetType: targetType,
