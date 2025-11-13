@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_order_form_custom_approval" model="ir.ui.view">
+        <field name="name">sale.order.form.custom.approval</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_submit_for_approval" type="object" string="提交审批"
+                        states="draft,sent" class="btn-primary"/>
+                <button name="action_approve" type="object" string="审批通过"
+                        attrs="{'invisible': [('approval_state','!=','submitted')]}"
+                        groups="sale_custom.group_sale_approver_custom"/>
+                <button name="action_reject" type="object" string="审批拒绝"
+                        attrs="{'invisible': [('approval_state','!=','submitted')]}"
+                        groups="sale_custom.group_sale_approver_custom"/>
+            </xpath>
+            <xpath expr="//sheet/notebook/page[@name='other_info']" position="inside">
+                <group>
+                    <field name="approval_state" readonly="1"/>
+                    <field name="expected_margin"/>
+                    <field name="allow_confirm_without_approval"/>
+                    <field name="reject_reason" attrs="{'invisible':[('approval_state','!=','rejected')]}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

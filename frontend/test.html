@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 5px solid #4CAF50;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 5px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ 服务器运行状态测试</h1>
+        
+        <div class="status success">
+            <strong>开发服务器正在运行！</strong><br>
+            地址: http://localhost:5173/
+        </div>
+        
+        <div class="status info">
+            <strong>如果您看到此页面：</strong><br>
+            • 服务器正常运行 ✅<br>
+            • 网络连接正常 ✅<br>
+            • 端口5173可访问 ✅
+        </div>
+        
+        <div class="status info">
+            <strong>IDE webview限制：</strong><br>
+            • net::ERR_ABORTED 是IDE限制<br>
+            • 不是您的代码问题<br>
+            • 请在浏览器中直接访问
+        </div>
+        
+        <div class="status success">
+            <strong>下一步：</strong><br>
+            请在浏览器中打开 → 
+            <a href="http://localhost:5173/" style="color: #4CAF50; text-decoration: underline;">
+                http://localhost:5173/
+            </a>
+        </div>
+    </div>
+</body>
+</html>

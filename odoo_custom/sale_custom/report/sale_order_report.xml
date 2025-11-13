@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_saleorder_document_custom" inherit_id="sale.report_saleorder_document">
+        <xpath expr="//table[@class='table table-sm o_main_table']//tbody" position="after">
+            <t t-if="o.expected_margin">
+                <p>预计毛利: <span t-esc="o.expected_margin"/></p>
+            </t>
+        </xpath>
+    </template>
+</odoo>

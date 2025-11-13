@@ -1,0 +1,10 @@
+const express = require('express');
+const { body, query } = require('express-validator');
+const { protect, authorize } = require('../middleware/auth');
+const controller = require('../controllers/experimentController');
+const router = express.Router();
+router.post('/create', protect, authorize('admin'), [ body('key').notEmpty(), body('variants').isArray({min:2}) ], controller.create);
+router.post('/assign', [ body('key').notEmpty() ], controller.assign);
+router.post('/track', [ body('key').notEmpty(), body('variant').notEmpty(), body('type').notEmpty() ], controller.track);
+router.get('/stats', [ query('key').notEmpty() ], controller.stats);
+module.exports = router;

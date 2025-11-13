@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_sale_approval_log_tree" model="ir.ui.view">
+        <field name="name">sale.approval.log.tree</field>
+        <field name="model">sale.approval.log</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="create_date"/>
+                <field name="order_name"/>
+                <field name="approval_state"/>
+                <field name="state"/>
+                <field name="amount_total"/>
+                <field name="expected_margin"/>
+                <field name="actor_id"/>
+                <field name="note"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_sale_approval_log_kanban" model="ir.ui.view">
+        <field name="name">sale.approval.log.kanban</field>
+        <field name="model">sale.approval.log</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="approval_state">
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <strong t-esc="record.order_name.value"/>
+                            <div>
+                                <span>审批:</span>
+                                <span t-esc="record.approval_state.value"/>
+                            </div>
+                            <div>
+                                <span>状态:</span>
+                                <span t-esc="record.state.value"/>
+                            </div>
+                            <div>
+                                <span>金额:</span>
+                                <span t-esc="record.amount_total.value"/>
+                            </div>
+                            <div t-if="record.expected_margin.value">
+                                <span>毛利:</span>
+                                <span t-esc="record.expected_margin.value"/>
+                            </div>
+                            <div>
+                                <span>执行人:</span>
+                                <span t-esc="record.actor_id.value"/>
+                            </div>
+                            <div t-if="record.note.value">
+                                <span>备注:</span>
+                                <span t-esc="record.note.value"/>
+                            </div>
+                            <div>
+                                <span>时间:</span>
+                                <span t-esc="record.create_date.value"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_sale_approval_log_search" model="ir.ui.view">
+        <field name="name">sale.approval.log.search</field>
+        <field name="model">sale.approval.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="order_name"/>
+                <filter name="submitted" string="待审批" domain="[('approval_state','=','submitted')]"/>
+                <filter name="approved" string="已审批" domain="[('approval_state','=','approved')]"/>
+                <filter name="rejected" string="已拒绝" domain="[('approval_state','=','rejected')]"/>
+                <filter name="confirmed" string="已确认" domain="[('approval_state','=','confirmed')]"/>
+                <group expand="0" string="分组">
+                    <filter name="group_by_order" string="按订单" context="{'group_by':'order_id'}"/>
+                    <filter name="group_by_actor" string="按执行人" context="{'group_by':'actor_id'}"/>
+                    <filter name="group_by_state" string="按审批" context="{'group_by':'approval_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_sale_approval_log" model="ir.actions.act_window">
+        <field name="name">销售审批日志</field>
+        <field name="res_model">sale.approval.log</field>
+        <field name="view_mode">tree,kanban,graph,pivot</field>
+        <field name="search_view_id" ref="view_sale_approval_log_search"/>
+    </record>
+
+    <menuitem id="menu_sale_approval_log" name="销售审批日志"
+              parent="sale.menu_sale_order" action="action_sale_approval_log" sequence="60"/>
+</odoo>

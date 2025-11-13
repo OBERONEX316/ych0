@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="param_sale_custom_webhook_url" model="ir.config_parameter">
+            <field name="key">sale_custom.webhook_url</field>
+            <field name="value">http://localhost:5000/api/webhooks/odoo</field>
+        </record>
+        <record id="param_sale_custom_webhook_secret" model="ir.config_parameter">
+            <field name="key">sale_custom.webhook_secret</field>
+            <field name="value">CHANGE_ME_SECRET</field>
+        </record>
+    </data>
+</odoo>

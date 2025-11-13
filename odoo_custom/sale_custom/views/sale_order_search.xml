@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_sales_order_filter_custom" model="ir.ui.view">
+        <field name="name">sale.order.search.custom</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='draft']" position="after">
+                <filter name="approval_submitted" string="待审批" domain="[('approval_state','=','submitted')]"/>
+                <filter name="approval_approved" string="已审批" domain="[('approval_state','=','approved')]"/>
+                <filter name="approval_rejected" string="已拒绝" domain="[('approval_state','=','rejected')]"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approval_state"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
