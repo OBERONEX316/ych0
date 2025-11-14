@@ -46,7 +46,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import AdminOverviewPage from './pages/AdminOverviewPage';
 import HomeBannerExperiment from './components/HomeBannerExperiment';
 import { Star, Truck, Shield, ArrowRight, Loader, AlertCircle } from 'lucide-react';
-import { productAPI } from './services/api';
+import { productAPI, healthAPI } from './services/api';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WishlistProvider } from './contexts/WishlistContext';
@@ -116,37 +116,42 @@ const HomePage = () => {
 
   // 获取商品数据
   const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('🔄 开始获取商品数据...');
-      
-      const params = {
-        category: selectedCategory,
-        minPrice: filters.minPrice,
-        maxPrice: filters.maxPrice,
-        inStock: filters.inStock,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
-      };
-      
-      if (searchQuery) {
-        params.search = searchQuery;
+    setLoading(true);
+    setError(null);
+    const params = {
+      category: selectedCategory,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      inStock: filters.inStock,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder
+    };
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    const delays = [1000, 2000, 4000];
+    let lastErr = null;
+    for (let i = 0; i < delays.length + 1; i++) {
+      try {
+        await healthAPI.checkHealth();
+        const response = await productAPI.getProducts(params);
+        const list = response?.data ?? response?.products ?? response ?? [];
+        setProducts(Array.isArray(list) ? list : []);
+        setLoading(false);
+        return;
+      } catch (err) {
+        lastErr = err;
+        const isNetwork = err?.code === 'ERR_NETWORK' || err?.message === 'Network Error';
+        if (!isNetwork || i === delays.length) {
+          setError(isNetwork ? '网络连接错误，请稍后重试' : (err?.message || '加载失败'));
+          setLoading(false);
+          return;
+        }
+        await new Promise(r => setTimeout(r, delays[i]));
       }
-      
-      const response = await productAPI.getProducts(params);
-      
-      if (response.success) {
-        console.log('✅ 商品数据获取成功:', response.data.length, '个商品');
-        setProducts(response.data);
-      } else {
-        throw new Error(response.error || '获取商品数据失败');
-      }
-    } catch (err) {
-      console.error('❌ 获取商品数据失败:', err.message);
-      setError(err.message);
-    } finally {
+    }
+    if (lastErr) {
+      setError(lastErr?.message || '加载失败');
       setLoading(false);
     }
   }, [selectedCategory, filters.minPrice, filters.maxPrice, filters.inStock, filters.sortBy, filters.sortOrder, searchQuery]);
