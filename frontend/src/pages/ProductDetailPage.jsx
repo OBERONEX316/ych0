@@ -203,22 +203,25 @@ const ProductDetailPage = () => {
             {/* 商品图片 */}
             <div className="space-y-4">
               <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded-lg overflow-hidden">
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-96 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
-                    <Package className="h-16 w-16 text-gray-400" />
-                  </div>
-                )}
+                {(() => {
+                  const gallery = product.images || [];
+                  const mainSrc = (gallery.length > 0 && typeof selectedImage === 'number') ? gallery[selectedImage] : product.image;
+                  if (mainSrc) {
+                    return (
+                      <img src={mainSrc} alt={product.name} className="w-full h-96 object-cover" />
+                    );
+                  }
+                  return (
+                    <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                      <Package className="h-16 w-16 text-gray-400" />
+                    </div>
+                  );
+                })()}
               </div>
               {product.images && product.images.length > 0 && (
                 <div className="flex space-x-2">
                   {product.images.map((img, i) => (
-                    <img key={i} src={img} alt="thumb" onClick={() => setSelectedImage(i)} className="w-16 h-16 object-cover rounded border cursor-pointer" />
+                    <img key={i} src={img} alt="thumb" onClick={() => setSelectedImage(i)} className={`w-16 h-16 object-cover rounded border cursor-pointer ${selectedImage === i ? 'ring-2 ring-primary-600' : ''}`} />
                   ))}
                 </div>
               )}

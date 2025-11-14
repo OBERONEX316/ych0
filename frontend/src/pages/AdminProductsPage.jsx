@@ -13,6 +13,7 @@ const AdminProductsPage = () => {
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
   const [dragIndex, setDragIndex] = useState();
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const load = async () => {
     try {
@@ -175,10 +176,23 @@ const AdminProductsPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">富文本描述</label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <button onClick={() => document.execCommand('bold')} className="px-2 border rounded">B</button>
+                    <button onClick={() => document.execCommand('italic')} className="px-2 border rounded">I</button>
+                    <button onClick={() => document.execCommand('underline')} className="px-2 border rounded">U</button>
+                    <button onClick={() => document.execCommand('insertOrderedList')} className="px-2 border rounded">OL</button>
+                    <button onClick={() => document.execCommand('insertUnorderedList')} className="px-2 border rounded">UL</button>
+                    <button onClick={() => document.execCommand('justifyLeft')} className="px-2 border rounded">居左</button>
+                    <button onClick={() => document.execCommand('justifyCenter')} className="px-2 border rounded">居中</button>
+                    <button onClick={() => document.execCommand('justifyRight')} className="px-2 border rounded">居右</button>
+                    <button onClick={() => document.execCommand('undo')} className="px-2 border rounded">撤销</button>
+                    <button onClick={() => document.execCommand('redo')} className="px-2 border rounded">重做</button>
+                  </div>
                   <div
                     contentEditable
                     className="w-full border rounded px-3 py-2 min-h-[120px]"
                     onInput={(e) => setForm({ ...form, descriptionHtml: e.currentTarget.innerHTML })}
+                    dangerouslySetInnerHTML={{ __html: form.descriptionHtml || '' }}
                   />
                   <div className="mt-2 flex items-center space-x-2">
                     <input type="file" accept="image/*" onChange={async (e) => {
@@ -232,26 +246,43 @@ const AdminProductsPage = () => {
                         await handleUploadGallery({ target: { files: [f] } });
                       }
                     }} />
-                    <div className="flex space-x-2">
-                      {(form.images || []).map((url, i) => (
-                        <img
-                          key={i}
-                          src={url}
-                          alt="gallery"
-                          draggable
-                          onDragStart={() => setDragIndex(i)}
-                          onDragOver={(ev) => ev.preventDefault()}
-                          onDrop={() => {
-                            if (typeof dragIndex === 'undefined') return;
-                            const arr = [...(form.images || [])];
-                            const [m] = arr.splice(dragIndex, 1);
-                            arr.splice(i, 0, m);
-                            setForm({ ...form, images: arr });
-                            setDragIndex(undefined);
-                          }}
-                          className="w-12 h-12 object-cover rounded border cursor-move"
-                        />
-                      ))}
+                    <div className="flex space-x-2 items-center">
+                      <button
+                        onClick={() => setForm({ ...form, images: (form.images || []).filter((_, idx) => !selectedImages.includes(idx)) })}
+                        className="px-2 py-1 border rounded text-sm"
+                      >批量删除选中</button>
+                      <div className="flex space-x-2">
+                        {(form.images || []).map((url, i) => (
+                          <label key={i} className="relative">
+                            <input
+                              type="checkbox"
+                              className="absolute top-1 left-1 z-10"
+                              checked={selectedImages.includes(i)}
+                              onChange={(e) => {
+                                const arr = new Set(selectedImages);
+                                if (e.target.checked) arr.add(i); else arr.delete(i);
+                                setSelectedImages(Array.from(arr));
+                              }}
+                            />
+                            <img
+                              src={url}
+                              alt="gallery"
+                              draggable
+                              onDragStart={() => setDragIndex(i)}
+                              onDragOver={(ev) => ev.preventDefault()}
+                              onDrop={() => {
+                                if (typeof dragIndex === 'undefined') return;
+                                const arr = [...(form.images || [])];
+                                const [m] = arr.splice(dragIndex, 1);
+                                arr.splice(i, 0, m);
+                                setForm({ ...form, images: arr });
+                                setDragIndex(undefined);
+                              }}
+                              className={`w-12 h-12 object-cover rounded border cursor-move ${typeof dragIndex !== 'undefined' ? 'ring-2 ring-blue-500' : ''}`}
+                            />
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
