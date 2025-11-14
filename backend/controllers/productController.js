@@ -132,10 +132,12 @@ const getCategories = async (req, res) => {
   }
 };
 
-// 创建商品（管理员功能）
+// 创建商品（管理员/卖家）
 const createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const payload = { ...req.body };
+    if (req.user?._id) payload.owner = req.user._id;
+    const product = new Product(payload);
     const savedProduct = await product.save();
 
     res.status(201).json({
@@ -153,17 +155,18 @@ const createProduct = async (req, res) => {
   }
 };
 
-// 更新商品（管理员功能）
+// 更新商品（管理员/卖家）
 const updateProduct = async (req, res) => {
   try {
-    // 获取原始商品信息以比较价格变化
     const originalProduct = await Product.findById(req.params.id);
+    if (!originalProduct) {
+      return res.status(404).json({ success: false, error: '商品不存在' });
+    }
+    if (!(req.user?.role === 'admin' || (originalProduct.owner && originalProduct.owner.toString() === req.user?._id?.toString()))) {
+      return res.status(403).json({ success: false, error: '没有权限' });
+    }
     
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
     if (!product) {
       return res.status(404).json({
@@ -215,14 +218,17 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// 删除商品（管理员功能）
+// 删除商品（管理员/卖家）
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
+    const originalProduct = await Product.findById(req.params.id);
+    if (!originalProduct) {
+      return res.status(404).json({ success: false, error: '商品不存在' });
+    }
+    if (!(req.user?.role === 'admin' || (originalProduct.owner && originalProduct.owner.toString() === req.user?._id?.toString()))) {
+      return res.status(403).json({ success: false, error: '没有权限' });
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
 
     if (!product) {
       return res.status(404).json({

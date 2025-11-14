@@ -83,6 +83,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   isActive: {
     type: Boolean,
     default: true
@@ -95,6 +96,7 @@ const productSchema = new mongoose.Schema({
     type: Map,
     of: String
   },
+  descriptionHtml: { type: String },
   variants: [{
     sku: { type: String, trim: true },
     attributes: { type: Map, of: String },

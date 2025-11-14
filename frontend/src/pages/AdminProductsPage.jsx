@@ -12,6 +12,7 @@ const AdminProductsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
+  const [dragIndex, setDragIndex] = useState();
 
   const load = async () => {
     try {
@@ -173,6 +174,27 @@ const AdminProductsPage = () => {
                   <input className="w-full border rounded px-3 py-2" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div>
+                  <label className="block text-sm text-gray-600 mb-1">富文本描述</label>
+                  <div
+                    contentEditable
+                    className="w-full border rounded px-3 py-2 min-h-[120px]"
+                    onInput={(e) => setForm({ ...form, descriptionHtml: e.currentTarget.innerHTML })}
+                  />
+                  <div className="mt-2 flex items-center space-x-2">
+                    <input type="file" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const res = await uploadAPI.uploadSingle(file, 'products');
+                        const url = res?.data?.url || res?.url || res?.data;
+                        if (url) {
+                          setForm({ ...form, descriptionHtml: (form.descriptionHtml || '') + `<p><img src="${url}" alt=""/></p>` });
+                        }
+                      } catch (_) {}
+                    }} />
+                  </div>
+                </div>
+                <div>
                   <label className="block text-sm text-gray-600 mb-1">描述</label>
                   <textarea className="w-full border rounded px-3 py-2" rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
                 </div>
@@ -204,10 +226,31 @@ const AdminProductsPage = () => {
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">图片集</label>
                   <div className="flex items-center space-x-3">
-                    <input type="file" accept="image/*" onChange={handleUploadGallery} />
+                    <input type="file" accept="image/*" multiple onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      for (const f of files) {
+                        await handleUploadGallery({ target: { files: [f] } });
+                      }
+                    }} />
                     <div className="flex space-x-2">
                       {(form.images || []).map((url, i) => (
-                        <img key={i} src={url} alt="gallery" className="w-12 h-12 object-cover rounded border" />
+                        <img
+                          key={i}
+                          src={url}
+                          alt="gallery"
+                          draggable
+                          onDragStart={() => setDragIndex(i)}
+                          onDragOver={(ev) => ev.preventDefault()}
+                          onDrop={() => {
+                            if (typeof dragIndex === 'undefined') return;
+                            const arr = [...(form.images || [])];
+                            const [m] = arr.splice(dragIndex, 1);
+                            arr.splice(i, 0, m);
+                            setForm({ ...form, images: arr });
+                            setDragIndex(undefined);
+                          }}
+                          className="w-12 h-12 object-cover rounded border cursor-move"
+                        />
                       ))}
                     </div>
                   </div>
@@ -219,7 +262,7 @@ const AdminProductsPage = () => {
                     <button onClick={addVariant} className="text-blue-600 hover:text-blue-800 flex items-center"><Plus className="w-4 h-4 mr-1" /> 添加变体</button>
                   </div>
                   {(form.variants || []).map((v, idx) => (
-                    <div key={idx} className="grid grid-cols-5 gap-2 items-center mb-2">
+                    <div key={idx} className="grid grid-cols-6 gap-2 items-center mb-2">
                       <input className="border rounded px-2 py-1" placeholder="SKU" value={v.sku || ''} onChange={e => updateVariant(idx, { sku: e.target.value })} />
                       <input className="border rounded px-2 py-1" placeholder="颜色" value={v.attributes?.color || ''} onChange={e => updateVariant(idx, { attributes: { ...(v.attributes || {}), color: e.target.value } })} />
                       <input className="border rounded px-2 py-1" placeholder="尺码" value={v.attributes?.size || ''} onChange={e => updateVariant(idx, { attributes: { ...(v.attributes || {}), size: e.target.value } })} />
@@ -227,6 +270,16 @@ const AdminProductsPage = () => {
                       <div className="flex items-center space-x-2">
                         <input className="border rounded px-2 py-1 w-20" type="number" placeholder="库存" value={v.stock || 0} onChange={e => updateVariant(idx, { stock: Number(e.target.value) })} />
                         <button onClick={() => removeVariant(idx)} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input type="file" accept="image/*" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const res = await uploadAPI.uploadSingle(file, 'products');
+                          const url = res?.data?.url || res?.url || res?.data;
+                          if (url) updateVariant(idx, { image: url });
+                        }} />
+                        {v.image && <img src={v.image} alt="v" className="w-10 h-10 object-cover rounded border" />}
                       </div>
                     </div>
                   ))}

@@ -215,6 +215,13 @@ const ProductDetailPage = () => {
                   </div>
                 )}
               </div>
+              {product.images && product.images.length > 0 && (
+                <div className="flex space-x-2">
+                  {product.images.map((img, i) => (
+                    <img key={i} src={img} alt="thumb" onClick={() => setSelectedImage(i)} className="w-16 h-16 object-cover rounded border cursor-pointer" />
+                  ))}
+                </div>
+              )}
               
               {/* 商品保障 */}
               <div className="grid grid-cols-2 gap-4">
@@ -292,9 +299,11 @@ const ProductDetailPage = () => {
 
               <div className="border-t border-b border-gray-200 py-6">
                 <h3 className="text-lg font-semibold mb-4">商品描述</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {product.description || '暂无详细描述'}
-                </p>
+                {product.descriptionHtml ? (
+                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
+                ) : (
+                  <p className="text-gray-600 leading-relaxed">{product.description || '暂无详细描述'}</p>
+                )}
               </div>
 
               {/* 库存信息 */}
