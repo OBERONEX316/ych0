@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
+import { Skeleton, SkeletonText } from './components/Skeleton';
+import Card from './components/ui/Card';
+import Button from './components/ui/Button';
 import ProductCard from './components/ProductCard';
 import CategoryFilter from './components/CategoryFilter';
 import AdvancedSearch from './components/AdvancedSearch';
@@ -196,10 +199,28 @@ const HomePage = () => {
   // 加载状态
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="h-12 w-12 text-primary-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">正在加载商品数据...</p>
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="p-6 md:col-span-2">
+              <Skeleton className="h-8 mb-4" />
+              <SkeletonText lines={3} />
+            </Card>
+            <Card className="p-6">
+              <Skeleton className="h-6 mb-3" />
+              <SkeletonText lines={4} />
+            </Card>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="p-4">
+                <Skeleton className="h-36 mb-3" />
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -321,10 +342,10 @@ const HomePage = () => {
                     筛选
                   </button>
                   
-                  <button className="flex items-center text-primary-600 hover:text-primary-700 font-semibold">
+                  <Button variant="primary" className="flex items-center">
                     查看全部
                     <ArrowRight className="h-5 w-5 ml-2" />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
