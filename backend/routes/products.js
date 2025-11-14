@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // 导入认证中间件
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 // 导入商品控制器
 const {
@@ -30,11 +30,14 @@ router.get('/', getProducts);
 // 获取商品分类
 router.get('/categories/list', getCategories);
 
-// 创建商品（管理员�?router.post('/', createProduct);
+// 创建商品（管理员或卖家）
+router.post('/', protect, authorize('admin','seller'), createProduct);
 
-// 更新商品（管理员�?router.put('/:id', updateProduct);
+// 更新商品（管理员或卖家）
+router.put('/:id', protect, authorize('admin','seller'), updateProduct);
 
-// 删除商品（管理员�?router.delete('/:id', deleteProduct);
+// 删除商品（管理员或卖家）
+router.delete('/:id', protect, authorize('admin','seller'), deleteProduct);
 
 // 获取热销商品
 router.get('/featured/top-selling', getTopSellingProducts);

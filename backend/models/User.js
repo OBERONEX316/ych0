@@ -94,8 +94,8 @@ const userSchema = new mongoose.Schema({
   // 账户状态
   role: {
     type: String,
-    enum: ['user', 'admin', 'moderator'],
-    default: 'user'
+    enum: ['buyer', 'seller', 'admin', 'moderator'],
+    default: 'buyer'
   },
   isActive: {
     type: Boolean,

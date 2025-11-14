@@ -323,7 +323,7 @@ const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
 
-    if (!['user', 'admin', 'moderator'].includes(role)) {
+    if (!['buyer', 'seller', 'admin', 'moderator'].includes(role)) {
       return res.status(400).json({
         success: false,
         error: '请提供有效的角色值'
