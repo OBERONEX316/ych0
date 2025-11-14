@@ -1,15 +1,34 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Search, Package, LogOut, Settings, Heart, BarChart3, Shield, Crown, Users, Gift, TrendingUp } from 'lucide-react';
+import { ShoppingCart, User, Search, Package, LogOut, Settings, Heart, BarChart3, Shield, Crown, Users, Gift, TrendingUp, Bell } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWishlist } from '../contexts/WishlistContext';
+import { notificationAPI } from '../services/api';
 
 const Navbar = memo(({ onCartClick, onOrdersClick }) => {
   const { cart } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
   const { getWishlistCount } = useWishlist();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (isAuthenticated) {
+          const res = await notificationAPI.getUnreadCount();
+          const count = res?.data?.count ?? res?.data ?? 0;
+          setUnreadCount(count);
+        } else {
+          setUnreadCount(0);
+        }
+      } catch (_) {
+        setUnreadCount(0);
+      }
+    };
+    load();
+  }, [isAuthenticated]);
 
   const handleCartClick = useCallback(() => {
     if (onCartClick) {
@@ -69,6 +88,9 @@ const Navbar = memo(({ onCartClick, onOrdersClick }) => {
                     <User className="h-6 w-6" />
                   )}
                   <span className="hidden sm:block text-sm font-medium">{user?.username}</span>
+                  {user?.role && (
+                    <span className="hidden sm:block text-xs text-gray-500">{user.role}</span>
+                  )}
                 </button>
                 
                 {showUserMenu && (
@@ -123,6 +145,14 @@ const Navbar = memo(({ onCartClick, onOrdersClick }) => {
                       {(user?.role === 'admin' || user?.role === 'moderator') && (
                         <div className="border-t border-gray-100 pt-2 mt-2">
                           <p className="text-xs font-medium text-gray-500 px-3 py-1">管理员面板</p>
+                          <a 
+                            href="/admin"
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Shield className="h-4 w-4" />
+                            <span>管理控制台</span>
+                          </a>
                           <a 
                             href="/admin/approval"
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -260,6 +290,17 @@ const Navbar = memo(({ onCartClick, onOrdersClick }) => {
             >
               <Package className="h-6 w-6" />
             </button>
+            <Link
+              to="/notifications"
+              className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative"
+            >
+              <Bell className="h-6 w-6" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
             <button 
               className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative"
               onClick={handleCartClick}

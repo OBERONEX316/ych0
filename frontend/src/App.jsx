@@ -41,6 +41,8 @@ import ProductPredictionDetail from './components/ProductPredictionDetail';
 import AdminSalesPredictionPage from './pages/AdminSalesPredictionPage';
 import InventoryOptimizationDashboard from './components/InventoryOptimizationDashboard';
 import AdminApprovalDashboard from './pages/AdminApprovalDashboard';
+import NotificationsPage from './pages/NotificationsPage';
+import AdminOverviewPage from './pages/AdminOverviewPage';
 import HomeBannerExperiment from './components/HomeBannerExperiment';
 import { Star, Truck, Shield, ArrowRight, Loader, AlertCircle } from 'lucide-react';
 import { productAPI } from './services/api';
@@ -598,6 +600,22 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <WishlistPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/notifications" 
+                          element={
+                            <ProtectedRoute>
+                              <NotificationsPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/admin" 
+                          element={
+                            <ProtectedRoute>
+                              <AdminOverviewPage />
                             </ProtectedRoute>
                           } 
                         />
