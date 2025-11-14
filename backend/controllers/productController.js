@@ -507,5 +507,16 @@ module.exports = {
   getRecommendedProducts,
   getRelatedProducts,
   getUserPreferenceRecommendations,
-  getPopularProducts
+  getPopularProducts,
+  getAdminProducts: async (req, res) => {
+    try {
+      const isSeller = req.user?.role === 'seller';
+      const query = { isActive: true };
+      if (isSeller) query.owner = req.user._id;
+      const products = await Product.find(query).sort({ createdAt: -1 }).lean();
+      res.json({ success: true, data: products });
+    } catch (error) {
+      res.status(500).json({ success: false, error: '获取商品失败' });
+    }
+  }
 };

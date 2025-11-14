@@ -18,7 +18,8 @@ const {
   getRecommendedProducts,
   getRelatedProducts,
   getUserPreferenceRecommendations,
-  getPopularProducts
+  getPopularProducts,
+  getAdminProducts
 } = require('../controllers/productController');
 
 // 获取所有商品
@@ -38,6 +39,9 @@ router.put('/:id', protect, authorize('admin','seller'), updateProduct);
 
 // 删除商品（管理员或卖家）
 router.delete('/:id', protect, authorize('admin','seller'), deleteProduct);
+
+// 管理员/卖家查看商品列表（卖家仅自己的）
+router.get('/admin/mine', protect, authorize('admin','seller'), getAdminProducts);
 
 // 获取热销商品
 router.get('/featured/top-selling', getTopSellingProducts);

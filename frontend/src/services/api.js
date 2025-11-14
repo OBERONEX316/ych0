@@ -99,6 +99,8 @@ export const productAPI = {
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
   // 删除商品（管理员或卖家）
   deleteProduct: (id) => api.delete(`/products/${id}`),
+  // 管理员/卖家商品列表
+  getMyProducts: () => api.get('/products/admin/mine'),
 };
 
 export const healthAPI = {
