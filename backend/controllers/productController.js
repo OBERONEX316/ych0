@@ -511,10 +511,23 @@ module.exports = {
   getAdminProducts: async (req, res) => {
     try {
       const isSeller = req.user?.role === 'seller';
-      const query = { isActive: true };
+      const { category, status = 'active', page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', minPrice, maxPrice, minStock } = req.query;
+      const query = {};
+      if (status === 'active') query.isActive = true;
+      if (status === 'inactive') query.isActive = false;
+      if (category) query.category = category;
       if (isSeller) query.owner = req.user._id;
-      const products = await Product.find(query).sort({ createdAt: -1 }).lean();
-      res.json({ success: true, data: products });
+      if (minPrice) query.price = { ...(query.price || {}), $gte: Number(minPrice) };
+      if (maxPrice) query.price = { ...(query.price || {}), $lte: Number(maxPrice) };
+      if (minStock) query.stock = { $gte: Number(minStock) };
+      const p = Math.max(1, Number(page));
+      const l = Math.max(1, Math.min(100, Number(limit)));
+      const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+      const [items, total] = await Promise.all([
+        Product.find(query).sort(sort).skip((p - 1) * l).limit(l).lean(),
+        Product.countDocuments(query)
+      ]);
+      res.json({ success: true, data: items, total, page: p, limit: l });
     } catch (error) {
       res.status(500).json({ success: false, error: '获取商品失败' });
     }

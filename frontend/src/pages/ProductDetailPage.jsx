@@ -36,6 +36,9 @@ const ProductDetailPage = () => {
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -58,6 +61,16 @@ const ProductDetailPage = () => {
       checkUserReview();
     }
   }, [product, showReviews]);
+
+  useEffect(() => {
+    if (!product || !Array.isArray(product.variants)) { setSelectedVariant(null); return; }
+    const v = product.variants.find(v => (
+      (selectedColor ? v.attributes?.color === selectedColor : true) &&
+      (selectedSize ? v.attributes?.size === selectedSize : true)
+    ));
+    setSelectedVariant(v || null);
+    if (v?.image) setSelectedImage(0);
+  }, [product, selectedColor, selectedSize]);
 
   const checkUserReview = async () => {
     if (isAuthenticated && user && product) {
@@ -97,7 +110,12 @@ const ProductDetailPage = () => {
     }
     
     try {
-      const result = await addToCart(product._id, quantity);
+      const variantInfo = selectedVariant ? {
+        variantSku: selectedVariant.sku,
+        variantAttributes: selectedVariant.attributes,
+        variantPriceDelta: selectedVariant.priceDelta,
+      } : null;
+      const result = await addToCart(product._id, quantity, variantInfo);
       if (result.success) {
         // 添加成功提示
         alert('商品已成功添加到购物车！');
@@ -280,7 +298,7 @@ const ProductDetailPage = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="text-3xl font-bold text-primary-600">
-                    ¥{product.price}
+                    ¥{(product.price || 0) + ((selectedVariant?.priceDelta || 0))}
                   </div>
                   
                   <button
@@ -315,7 +333,27 @@ const ProductDetailPage = () => {
               </div>
 
               {/* 购买操作 */}
-              <div className="space-y-4">
+                <div className="space-y-4">
+                  {Array.isArray(product.variants) && product.variants.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">颜色</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from(new Set(product.variants.map(v => v.attributes?.color).filter(Boolean))).map(c => (
+                            <button key={c} onClick={() => setSelectedColor(c)} className={`px-3 py-1 border rounded ${selectedColor === c ? 'bg-primary-600 text-white' : ''}`}>{c}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">尺码</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from(new Set(product.variants.map(v => v.attributes?.size).filter(Boolean))).map(s => (
+                            <button key={s} onClick={() => setSelectedSize(s)} className={`px-3 py-1 border rounded ${selectedSize === s ? 'bg-primary-600 text-white' : ''}`}>{s}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-medium">数量:</span>
                   <div className="flex items-center border border-gray-300 rounded-lg">

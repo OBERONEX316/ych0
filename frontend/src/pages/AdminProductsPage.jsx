@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { productAPI, uploadAPI } from '../services/api';
 import { Plus, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const initialForm = { name: '', description: '', price: '', category: '', stock: '', image: '', images: [], variants: [] };
 
@@ -14,14 +15,48 @@ const AdminProductsPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [dragIndex, setDragIndex] = useState();
   const [selectedImages, setSelectedImages] = useState([]);
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStatus, setFilterStatus] = useState('active');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minStock, setMinStock] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(10);
+  const { user } = useAuth();
+  const editorRef = useRef(null);
 
   const load = async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await productAPI.getProducts();
+      const params = user?.role === 'seller'
+        ? {
+            category: filterCategory || undefined,
+            status: filterStatus,
+            page,
+            limit,
+            sortBy,
+            sortOrder,
+            minPrice: minPrice || undefined,
+            maxPrice: maxPrice || undefined,
+            minStock: minStock || undefined
+          }
+        : {
+            category: filterCategory || undefined,
+            sortBy,
+            sortOrder,
+            minPrice: minPrice || undefined,
+            maxPrice: maxPrice || undefined,
+            minStock: minStock || undefined
+          };
+      const res = user?.role === 'seller' ? await productAPI.getMyProducts(params) : await productAPI.getProducts(params);
       const data = res?.data || res?.products || res || [];
-      setItems(Array.isArray(data) ? data : []);
+      const arr = Array.isArray(data) ? data : [];
+      setItems(arr);
+      setTotal(res?.total ?? arr.length);
     } catch (e) {
       setError(e?.response?.data?.error || '加载失败');
     } finally {
@@ -29,7 +64,7 @@ const AdminProductsPage = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [filterCategory, filterStatus, sortBy, sortOrder, minPrice, maxPrice, minStock, page]);
 
   const openCreate = () => { setEditingId(null); setForm(initialForm); setShowForm(true); };
   const openEdit = (item) => { setEditingId(item._id); setForm({ name: item.name || '', description: item.description || '', price: item.price || '', category: item.category || '', stock: item.stock || '', image: item.image || '', images: item.images || [], variants: item.variants || [] }); setShowForm(true); };
@@ -122,6 +157,29 @@ const AdminProductsPage = () => {
           </button>
         </div>
 
+        <div className="flex items-center space-x-3 mb-4">
+          <input className="border rounded px-3 py-2" placeholder="分类" value={filterCategory} onChange={e => { setPage(1); setFilterCategory(e.target.value); }} />
+          {user?.role === 'seller' && (
+            <select className="border rounded px-3 py-2" value={filterStatus} onChange={e => { setPage(1); setFilterStatus(e.target.value); }}>
+              <option value="active">上架</option>
+              <option value="inactive">下架</option>
+              <option value="all">全部</option>
+            </select>
+          )}
+          <input className="border rounded px-2 py-2 w-24" placeholder="最低价" value={minPrice} onChange={e => { setPage(1); setMinPrice(e.target.value); }} />
+          <input className="border rounded px-2 py-2 w-24" placeholder="最高价" value={maxPrice} onChange={e => { setPage(1); setMaxPrice(e.target.value); }} />
+          <input className="border rounded px-2 py-2 w-24" placeholder="最低库存" value={minStock} onChange={e => { setPage(1); setMinStock(e.target.value); }} />
+          <select className="border rounded px-3 py-2" value={sortBy} onChange={e => { setPage(1); setSortBy(e.target.value); }}>
+            <option value="createdAt">创建时间</option>
+            <option value="price">价格</option>
+            <option value="stock">库存</option>
+          </select>
+          <select className="border rounded px-3 py-2" value={sortOrder} onChange={e => { setPage(1); setSortOrder(e.target.value); }}>
+            <option value="desc">降序</option>
+            <option value="asc">升序</option>
+          </select>
+        </div>
+
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
             <div className="flex items-center">
@@ -163,6 +221,12 @@ const AdminProductsPage = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex items-center justify-end space-x-2 mt-4">
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50">上一页</button>
+          <span className="text-sm text-gray-600">{page}</span>
+          <button disabled={page * limit >= total} onClick={() => setPage(page + 1)} className="px-3 py-1 border rounded disabled:opacity-50">下一页</button>
         </div>
 
         {showForm && (
@@ -253,7 +317,7 @@ const AdminProductsPage = () => {
                       >批量删除选中</button>
                       <div className="flex space-x-2">
                         {(form.images || []).map((url, i) => (
-                          <label key={i} className="relative">
+                          <label key={i} className="relative inline-block">
                             <input
                               type="checkbox"
                               className="absolute top-1 left-1 z-10"
@@ -280,6 +344,11 @@ const AdminProductsPage = () => {
                               }}
                               className={`w-12 h-12 object-cover rounded border cursor-move ${typeof dragIndex !== 'undefined' ? 'ring-2 ring-blue-500' : ''}`}
                             />
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, images: (form.images || []).filter((_, idx) => idx !== i) })}
+                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                            >×</button>
                           </label>
                         ))}
                       </div>

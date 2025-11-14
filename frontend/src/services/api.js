@@ -100,7 +100,7 @@ export const productAPI = {
   // 删除商品（管理员或卖家）
   deleteProduct: (id) => api.delete(`/products/${id}`),
   // 管理员/卖家商品列表
-  getMyProducts: () => api.get('/products/admin/mine'),
+  getMyProducts: (params = {}) => api.get('/products/admin/mine', { params }),
 };
 
 export const healthAPI = {
