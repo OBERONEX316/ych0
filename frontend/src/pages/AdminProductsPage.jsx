@@ -160,10 +160,14 @@ const AdminProductsPage = () => {
                   分类: i.category || '',
                   价格: i.price,
                   库存: i.stock ?? '',
+                  主图: i.image || '',
+                  图集: Array.isArray(i.images) ? i.images.join('|') : '',
+                  描述: (i.description || '').replace(/[\n\r]+/g, ' ').slice(0,500),
+                  富文本: (i.descriptionHtml || '').replace(/[\n\r]+/g, ' ').slice(0,1000),
                   变体: Array.isArray(i.variants) ? i.variants.map(v => `SKU:${v.sku || ''}|${Object.entries(v.attributes || {}).map(([k,vv]) => `${k}:${vv}`).join(';')}|加价:${v.priceDelta || 0}|库存:${v.stock || 0}`).join(' || ') : '',
                   创建时间: i.createdAt ? new Date(i.createdAt).toISOString() : ''
                 }));
-                const header = Object.keys(rows[0] || { 名称: '', 分类: '', 价格: '', 库存: '', 变体: '', 创建时间: '' });
+                const header = Object.keys(rows[0] || { 名称: '', 分类: '', 价格: '', 库存: '', 主图: '', 图集: '', 描述: '', 富文本: '', 变体: '', 创建时间: '' });
                 const csv = [header.join(','), ...rows.map(r => header.map(h => `${String(r[h]).replace(/"/g,'""')}`).join(','))].join('\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);

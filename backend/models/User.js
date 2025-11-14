@@ -363,9 +363,10 @@ userSchema.methods.calculateCartTotals = async function() {
 
     // 计算总数量和总价格
     for (const item of this.cart.items) {
-      if (item.product && item.product.price) {
+      if (item.product && typeof item.product.price === 'number') {
+        const delta = typeof item.variantPriceDelta === 'number' ? item.variantPriceDelta : 0;
         totalItems += item.quantity;
-        totalPrice += item.quantity * item.product.price;
+        totalPrice += item.quantity * (item.product.price + delta);
       }
     }
 

@@ -69,7 +69,11 @@ const ProductDetailPage = () => {
       (selectedSize ? v.attributes?.size === selectedSize : true)
     ));
     setSelectedVariant(v || null);
-    if (v?.image) setSelectedImage(0);
+    if (v?.image) {
+      const gallery = product.images || [];
+      const idx = gallery.findIndex((g) => g === v.image);
+      if (idx >= 0) setSelectedImage(idx);
+    }
   }, [product, selectedColor, selectedSize]);
 
   const checkUserReview = async () => {
@@ -240,7 +244,7 @@ const ProductDetailPage = () => {
               {product.images && product.images.length > 0 && (
                 <div className="flex space-x-2">
                   {product.images.map((img, i) => (
-                    <img key={i} src={img} alt="thumb" onClick={() => setSelectedImage(i)} className={`w-16 h-16 object-cover rounded border cursor-pointer ${selectedImage === i ? 'ring-2 ring-primary-600' : ''}`} />
+                    <img key={i} src={img} alt="thumb" onClick={() => setSelectedImage(i)} className={`w-16 h-16 object-cover rounded border cursor-pointer ${(selectedVariant?.image === img || selectedImage === i) ? 'ring-2 ring-primary-600' : ''}`} />
                   ))}
                 </div>
               )}
