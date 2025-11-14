@@ -92,6 +92,13 @@ export const productAPI = {
   // 获取热门收藏商品
   getPopularProducts: (params = {}) => 
     api.get('/products/featured/popular', { params }),
+
+  // 创建商品（管理员或卖家）
+  createProduct: (data) => api.post('/products', data),
+  // 更新商品（管理员或卖家）
+  updateProduct: (id, data) => api.put(`/products/${id}`, data),
+  // 删除商品（管理员或卖家）
+  deleteProduct: (id) => api.delete(`/products/${id}`),
 };
 
 export const healthAPI = {
@@ -438,3 +445,14 @@ export { api };
 
 // 导出各个API服务
 export * from './flashSaleAPI';
+// 通知API服务
+export const notificationAPI = {
+  // 获取未读数量
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  // 获取通知列表
+  list: (params = {}) => api.get('/notifications', { params }),
+  // 标记为已读
+  markRead: (id) => api.put(`/notifications/${id}/read`),
+  // 标记全部已读
+  markAllRead: () => api.put('/notifications/read-all')
+};

@@ -17,6 +17,7 @@ import SearchPage from './pages/SearchPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import WishlistPage from './pages/WishlistPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminProductsPage from './pages/AdminProductsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminChatPage from './pages/AdminChatPage';
@@ -616,6 +617,14 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <AdminOverviewPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/admin/products" 
+                          element={
+                            <ProtectedRoute>
+                              <AdminProductsPage />
                             </ProtectedRoute>
                           } 
                         />
