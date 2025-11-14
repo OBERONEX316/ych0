@@ -80,17 +80,21 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // 创建订单项
+    // 创建订单项（包含变体加价与属性）
     const orderItems = await Promise.all(
       items.map(async (item) => {
         const product = await Product.findById(item.product);
+        const delta = Number(item.variantPriceDelta || 0);
+        const unitPrice = (product.price || 0) + delta;
         return {
           product: item.product,
           name: product.name,
           image: product.image,
-          price: product.price,
+          price: unitPrice,
+          variantSku: item.variantSku,
+          variantAttributes: item.variantAttributes,
           quantity: item.quantity,
-          total: product.price * item.quantity
+          total: unitPrice * item.quantity
         };
       })
     );

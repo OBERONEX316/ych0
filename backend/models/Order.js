@@ -19,6 +19,8 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  variantSku: { type: String },
+  variantAttributes: { type: Map, of: String },
   quantity: {
     type: Number,
     required: true,
