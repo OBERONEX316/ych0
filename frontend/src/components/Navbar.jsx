@@ -1,10 +1,11 @@
 import React, { useState, useCallback, memo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Search, Package, LogOut, Settings, Heart, BarChart3, Shield, Crown, Users, Gift, TrendingUp, Bell } from 'lucide-react';
+import { ShoppingCart, User, Search, Package, LogOut, Settings, Heart, BarChart3, Shield, Crown, Users, Gift, TrendingUp, Bell, Sun, Moon } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { notificationAPI } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Navbar = memo(({ onCartClick, onOrdersClick }) => {
   const { cart } = useCart();
@@ -12,6 +13,7 @@ const Navbar = memo(({ onCartClick, onOrdersClick }) => {
   const { getWishlistCount } = useWishlist();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const load = async () => {
@@ -301,6 +303,13 @@ const Navbar = memo(({ onCartClick, onOrdersClick }) => {
                 </span>
               )}
             </Link>
+            <button
+              onClick={toggle}
+              aria-label="切换主题"
+              className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+            </button>
             <button 
               className="p-2 text-gray-600 hover:text-primary-600 transition-colors relative"
               onClick={handleCartClick}
