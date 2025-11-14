@@ -152,13 +152,39 @@ const AdminProductsPage = () => {
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">商品管理</h1>
-          <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-            <Plus className="w-5 h-5 mr-2" /> 新增商品
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                const rows = items.map(i => ({
+                  名称: i.name,
+                  分类: i.category || '',
+                  价格: i.price,
+                  库存: i.stock ?? '',
+                  变体: Array.isArray(i.variants) ? i.variants.map(v => `SKU:${v.sku || ''}|${Object.entries(v.attributes || {}).map(([k,vv]) => `${k}:${vv}`).join(';')}|加价:${v.priceDelta || 0}|库存:${v.stock || 0}`).join(' || ') : '',
+                  创建时间: i.createdAt ? new Date(i.createdAt).toISOString() : ''
+                }));
+                const header = Object.keys(rows[0] || { 名称: '', 分类: '', 价格: '', 库存: '', 变体: '', 创建时间: '' });
+                const csv = [header.join(','), ...rows.map(r => header.map(h => `${String(r[h]).replace(/"/g,'""')}`).join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'products.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              className="px-4 py-2 border rounded"
+            >导出 CSV</button>
+            <button onClick={openCreate} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+              <Plus className="w-5 h-5 mr-2" /> 新增商品
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center space-x-3 mb-4">
-          <input className="border rounded px-3 py-2" placeholder="分类" value={filterCategory} onChange={e => { setPage(1); setFilterCategory(e.target.value); }} />
+          <input className="border rounded px-3 py-2" placeholder="分类或名称/SKU" value={filterCategory} onChange={e => { setPage(1); setFilterCategory(e.target.value); }} />
           {user?.role === 'seller' && (
             <select className="border rounded px-3 py-2" value={filterStatus} onChange={e => { setPage(1); setFilterStatus(e.target.value); }}>
               <option value="active">上架</option>

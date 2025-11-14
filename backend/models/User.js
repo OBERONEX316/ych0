@@ -123,6 +123,10 @@ const userSchema = new mongoose.Schema({
         min: 1,
         default: 1
       },
+      variantSku: { type: String },
+      variantAttributes: { type: Map, of: String },
+      variantPriceDelta: { type: Number, default: 0 },
+      variantStock: { type: Number },
       addedAt: {
         type: Date,
         default: Date.now

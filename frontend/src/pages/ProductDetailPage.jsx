@@ -223,7 +223,8 @@ const ProductDetailPage = () => {
               <div className="aspect-w-16 aspect-h-12 bg-gray-100 rounded-lg overflow-hidden">
                 {(() => {
                   const gallery = product.images || [];
-                  const mainSrc = (gallery.length > 0 && typeof selectedImage === 'number') ? gallery[selectedImage] : product.image;
+                  const mainSrc = selectedVariant?.image
+                    || ((gallery.length > 0 && typeof selectedImage === 'number') ? gallery[selectedImage] : product.image);
                   if (mainSrc) {
                     return (
                       <img src={mainSrc} alt={product.name} className="w-full h-96 object-cover" />
@@ -339,20 +340,29 @@ const ProductDetailPage = () => {
                       <div>
                         <p className="text-sm text-gray-600 mb-2">颜色</p>
                         <div className="flex flex-wrap gap-2">
-                          {Array.from(new Set(product.variants.map(v => v.attributes?.color).filter(Boolean))).map(c => (
-                            <button key={c} onClick={() => setSelectedColor(c)} className={`px-3 py-1 border rounded ${selectedColor === c ? 'bg-primary-600 text-white' : ''}`}>{c}</button>
-                          ))}
+                          {Array.from(new Set(product.variants.map(v => v.attributes?.color).filter(Boolean))).map(c => {
+                            const available = product.variants.some(v => v.attributes?.color === c && (selectedSize ? v.attributes?.size === selectedSize : true) && (v.stock || 0) > 0);
+                            return (
+                              <button key={c} onClick={() => setSelectedColor(c)} disabled={!available} className={`px-3 py-1 border rounded ${selectedColor === c ? 'bg-primary-600 text-white' : ''} ${!available ? 'opacity-50 cursor-not-allowed' : ''}`}>{c}</button>
+                            );
+                          })}
                         </div>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 mb-2">尺码</p>
                         <div className="flex flex-wrap gap-2">
-                          {Array.from(new Set(product.variants.map(v => v.attributes?.size).filter(Boolean))).map(s => (
-                            <button key={s} onClick={() => setSelectedSize(s)} className={`px-3 py-1 border rounded ${selectedSize === s ? 'bg-primary-600 text-white' : ''}`}>{s}</button>
-                          ))}
+                          {Array.from(new Set(product.variants.map(v => v.attributes?.size).filter(Boolean))).map(s => {
+                            const available = product.variants.some(v => v.attributes?.size === s && (selectedColor ? v.attributes?.color === selectedColor : true) && (v.stock || 0) > 0);
+                            return (
+                              <button key={s} onClick={() => setSelectedSize(s)} disabled={!available} className={`px-3 py-1 border rounded ${selectedSize === s ? 'bg-primary-600 text-white' : ''} ${!available ? 'opacity-50 cursor-not-allowed' : ''}`}>{s}</button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
+                  )}
+                  {selectedVariant && (
+                    <p className="text-sm text-gray-600">当前库存: {selectedVariant.stock || 0}</p>
                   )}
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-medium">数量:</span>

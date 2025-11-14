@@ -61,6 +61,7 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
+    const variantPayload = req.body.variant || req.body.flashSaleData || null;
 
     if (!productId) {
       return res.status(400).json({
@@ -69,12 +70,8 @@ const addToCart = async (req, res) => {
       });
     }
 
-    // 验证商品是否存在且有库存
-    const product = await Product.findOne({
-      _id: productId,
-      isActive: true,
-      stock: { $gt: 0 }
-    });
+    // 验证商品是否存在且有库存（如选择变体，优先检查变体库存）
+    const product = await Product.findOne({ _id: productId, isActive: true });
 
     if (!product) {
       return res.status(404).json({
@@ -83,21 +80,57 @@ const addToCart = async (req, res) => {
       });
     }
 
+    let variantSku, variantAttributes, variantPriceDelta = 0, variantStock;
+    if (variantPayload) {
+      variantSku = variantPayload.variantSku;
+      variantAttributes = variantPayload.variantAttributes || {};
+      variantPriceDelta = Number(variantPayload.variantPriceDelta || 0);
+      // 查找匹配变体库存
+      if (Array.isArray(product.variants)) {
+        const matched = product.variants.find(v => {
+          if (variantSku && v.sku === variantSku) return true;
+          const attrs = v.attributes || {};
+          const keys = Object.keys(variantAttributes || {});
+          return keys.every(k => String(attrs[k] || '') === String(variantAttributes[k] || ''));
+        });
+        if (matched) variantStock = matched.stock;
+      }
+      // 如果指定变体但无库存或不存在，拒绝添加
+      if (typeof variantStock === 'number' && variantStock <= 0) {
+        return res.status(400).json({ success: false, error: '该变体库存不足' });
+      }
+    }
+
+    // 基础库存检查（无变体时）
+    if (!variantPayload && product.stock <= 0) {
+      return res.status(404).json({ success: false, error: '商品不存在或库存不足' });
+    }
+
     const user = await User.findById(req.user.id);
     
     // 检查商品是否已在购物车中
     const existingItemIndex = user.cart.items.findIndex(
-      item => item.product.toString() === productId
+      item => item.product.toString() === productId && String(item.variantSku || '') === String(variantSku || '')
     );
 
     if (existingItemIndex > -1) {
       // 更新数量
-      user.cart.items[existingItemIndex].quantity += quantity;
+      // 更新数量前检查变体库存上限
+      const maxStock = typeof user.cart.items[existingItemIndex].variantStock === 'number' ? user.cart.items[existingItemIndex].variantStock : product.stock;
+      const newQty = user.cart.items[existingItemIndex].quantity + quantity;
+      if (typeof maxStock === 'number' && newQty > maxStock) {
+        return res.status(400).json({ success: false, error: '超过库存上限' });
+      }
+      user.cart.items[existingItemIndex].quantity = newQty;
     } else {
       // 添加新商品
       user.cart.items.push({
         product: productId,
         quantity,
+        variantSku,
+        variantAttributes,
+        variantPriceDelta,
+        variantStock,
         addedAt: new Date()
       });
     }
@@ -152,7 +185,8 @@ const updateCartItem = async (req, res) => {
 
     // 检查库存
     const product = await Product.findById(cartItem.product);
-    if (quantity > product.stock) {
+    const maxStock = typeof cartItem.variantStock === 'number' ? cartItem.variantStock : product.stock;
+    if (quantity > maxStock) {
       return res.status(400).json({
         success: false,
         error: '库存不足'
