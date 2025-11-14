@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { productAPI } from '../services/api';
+import { productAPI, uploadAPI } from '../services/api';
 import { Plus, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
 
-const initialForm = { name: '', price: '', category: '', stock: '' };
+const initialForm = { name: '', description: '', price: '', category: '', stock: '', image: '', images: [], variants: [] };
 
 const AdminProductsPage = () => {
   const [items, setItems] = useState([]);
@@ -30,7 +30,7 @@ const AdminProductsPage = () => {
   useEffect(() => { load(); }, []);
 
   const openCreate = () => { setEditingId(null); setForm(initialForm); setShowForm(true); };
-  const openEdit = (item) => { setEditingId(item._id); setForm({ name: item.name || '', price: item.price || '', category: item.category || '', stock: item.stock || '' }); setShowForm(true); };
+  const openEdit = (item) => { setEditingId(item._id); setForm({ name: item.name || '', description: item.description || '', price: item.price || '', category: item.category || '', stock: item.stock || '', image: item.image || '', images: item.images || [], variants: item.variants || [] }); setShowForm(true); };
 
   const save = async () => {
     try {
@@ -56,6 +56,46 @@ const AdminProductsPage = () => {
     } catch (e) {
       alert(e?.response?.data?.error || '删除失败');
     }
+  };
+
+  const handleUploadMain = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadAPI.uploadSingle(file, 'products');
+      const url = res?.data?.url || res?.url || res?.data;
+      if (url) setForm({ ...form, image: url });
+    } catch (err) {
+      alert('主图上传失败');
+    }
+  };
+
+  const handleUploadGallery = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadAPI.uploadSingle(file, 'products');
+      const url = res?.data?.url || res?.url || res?.data;
+      if (url) setForm({ ...form, images: [...(form.images || []), url] });
+    } catch (err) {
+      alert('图片上传失败');
+    }
+  };
+
+  const addVariant = () => {
+    setForm({ ...form, variants: [...(form.variants || []), { sku: '', attributes: { color: '', size: '' }, priceDelta: 0, stock: 0 }] });
+  };
+
+  const updateVariant = (idx, patch) => {
+    const arr = [...(form.variants || [])];
+    arr[idx] = { ...arr[idx], ...patch };
+    setForm({ ...form, variants: arr });
+  };
+
+  const removeVariant = (idx) => {
+    const arr = [...(form.variants || [])];
+    arr.splice(idx, 1);
+    setForm({ ...form, variants: arr });
   };
 
   if (loading) {
@@ -133,6 +173,10 @@ const AdminProductsPage = () => {
                   <input className="w-full border rounded px-3 py-2" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div>
+                  <label className="block text-sm text-gray-600 mb-1">描述</label>
+                  <textarea className="w-full border rounded px-3 py-2" rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                </div>
+                <div>
                   <label className="block text-sm text-gray-600 mb-1">分类</label>
                   <input className="w-full border rounded px-3 py-2" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
                 </div>
@@ -145,6 +189,47 @@ const AdminProductsPage = () => {
                     <label className="block text-sm text-gray-600 mb-1">库存</label>
                     <input type="number" className="w-full border rounded px-3 py-2" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
                   </div>
+                </div>
+                {/* 主图上传与预览 */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">主图</label>
+                  <div className="flex items-center space-x-3">
+                    <input type="file" accept="image/*" onChange={handleUploadMain} />
+                    {form.image && (
+                      <img src={form.image} alt="main" className="w-16 h-16 object-cover rounded border" />
+                    )}
+                  </div>
+                </div>
+                {/* 图集上传与预览 */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">图片集</label>
+                  <div className="flex items-center space-x-3">
+                    <input type="file" accept="image/*" onChange={handleUploadGallery} />
+                    <div className="flex space-x-2">
+                      {(form.images || []).map((url, i) => (
+                        <img key={i} src={url} alt="gallery" className="w-12 h-12 object-cover rounded border" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* 变体设置 */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm text-gray-600">SKU 变体</label>
+                    <button onClick={addVariant} className="text-blue-600 hover:text-blue-800 flex items-center"><Plus className="w-4 h-4 mr-1" /> 添加变体</button>
+                  </div>
+                  {(form.variants || []).map((v, idx) => (
+                    <div key={idx} className="grid grid-cols-5 gap-2 items-center mb-2">
+                      <input className="border rounded px-2 py-1" placeholder="SKU" value={v.sku || ''} onChange={e => updateVariant(idx, { sku: e.target.value })} />
+                      <input className="border rounded px-2 py-1" placeholder="颜色" value={v.attributes?.color || ''} onChange={e => updateVariant(idx, { attributes: { ...(v.attributes || {}), color: e.target.value } })} />
+                      <input className="border rounded px-2 py-1" placeholder="尺码" value={v.attributes?.size || ''} onChange={e => updateVariant(idx, { attributes: { ...(v.attributes || {}), size: e.target.value } })} />
+                      <input className="border rounded px-2 py-1" type="number" placeholder="加价" value={v.priceDelta || 0} onChange={e => updateVariant(idx, { priceDelta: Number(e.target.value) })} />
+                      <div className="flex items-center space-x-2">
+                        <input className="border rounded px-2 py-1 w-20" type="number" placeholder="库存" value={v.stock || 0} onChange={e => updateVariant(idx, { stock: Number(e.target.value) })} />
+                        <button onClick={() => removeVariant(idx)} className="text-red-600 hover:text-red-800"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div className="flex items-center justify-end space-x-3 mt-2">
                   <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded border">取消</button>
@@ -160,4 +245,3 @@ const AdminProductsPage = () => {
 };
 
 export default AdminProductsPage;
-

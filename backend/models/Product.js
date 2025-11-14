@@ -94,7 +94,14 @@ const productSchema = new mongoose.Schema({
   specifications: {
     type: Map,
     of: String
-  }
+  },
+  variants: [{
+    sku: { type: String, trim: true },
+    attributes: { type: Map, of: String },
+    priceDelta: { type: Number, default: 0 },
+    stock: { type: Number, default: 0, min: [0, '库存不能为负数'] },
+    image: { type: String }
+  }]
 }, {
   timestamps: true, // 自动添加 createdAt 和 updatedAt
   toJSON: { virtuals: true },

@@ -456,3 +456,12 @@ export const notificationAPI = {
   // 标记全部已读
   markAllRead: () => api.put('/notifications/read-all')
 };
+// 上传API
+export const uploadAPI = {
+  uploadSingle: (file, folder = 'products') => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('folder', folder);
+    return api.post('/upload/single', form);
+  }
+};
