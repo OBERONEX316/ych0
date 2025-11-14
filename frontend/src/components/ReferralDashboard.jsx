@@ -67,8 +67,14 @@ const ReferralDashboard = ({ token }) => {
     setTimeout(() => setCopiedCode(''), 2000);
   };
 
+  const copyShareLink = (code) => {
+    const link = `${window.location.origin}/invite/${code}`;
+    navigator.clipboard.writeText(link);
+    toast.success('Share link copied!');
+  };
+
   const shareOnSocial = (platform, referralCode) => {
-    const shareUrl = `${window.location.origin}/register?ref=${referralCode}`;
+    const shareUrl = `${window.location.origin}/invite/${referralCode}`;
     const shareText = `Join me and get amazing rewards! Use my referral code: ${referralCode}`;
     
     let shareUrlPlatform = '';
@@ -170,6 +176,42 @@ const ReferralDashboard = ({ token }) => {
               </p>
             </div>
             <Gift className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Conversion Overview */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversion Rate</h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">Completed</span>
+            <span className="text-green-600 font-medium">
+              {referralStats?.stats?.completedReferrals || 0}
+            </span>
+          </div>
+          <div className="w-full h-3 bg-gray-100 rounded">
+            <div
+              className="h-3 bg-green-500 rounded"
+              style={{ width: `${Math.min(100, Math.round(((referralStats?.stats?.completedReferrals || 0) / Math.max(1, referralStats?.stats?.totalReferrals || 1)) * 100))}%` }}
+            ></div>
+          </div>
+          <div className="text-xs text-gray-500">
+            {Math.round(((referralStats?.stats?.completedReferrals || 0) / Math.max(1, referralStats?.stats?.totalReferrals || 1)) * 100)}%
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-sm font-semibold">{referralStats?.stats?.totalReferrals || 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Pending</p>
+            <p className="text-sm font-semibold text-yellow-600">{referralStats?.stats?.pendingReferrals || 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Completed</p>
+            <p className="text-sm font-semibold text-green-600">{referralStats?.stats?.completedReferrals || 0}</p>
           </div>
         </div>
       </div>
@@ -312,6 +354,13 @@ const ReferralDashboard = ({ token }) => {
                               <Copy className="w-4 h-4" />
                             )}
                           </button>
+                          <button
+                            onClick={() => copyShareLink(referral.referralCode)}
+                            className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                          >
+                            <Share2 className="w-4 h-4" />
+                            <span>Copy link</span>
+                          </button>
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -327,6 +376,16 @@ const ReferralDashboard = ({ token }) => {
                           <p className="text-sm text-gray-600">
                             Referred on: {new Date(referral.referralDate).toLocaleDateString()}
                           </p>
+                          <div className="mt-3 flex items-center space-x-4">
+                            <img
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${window.location.origin}/register?ref=${referral.referralCode}`)}`}
+                              alt="QR"
+                              className="w-20 h-20 border rounded"
+                            />
+                            <div className="text-xs text-gray-500">
+                              Scan to register with your referral
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
